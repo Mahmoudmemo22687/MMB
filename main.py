@@ -1,23 +1,20 @@
 import flet as ft
-import random
 
 def main(page: ft.Page):
-    page.title = "لعبة X O مع روبوت"
+    page.title = "لعبة X O"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.window_width = 300
-    page.window_height = 400
+    page.window_height = 715
 
     board = [""] * 9
-    human = "X"
-    ai = "O"
+    current_player = "X"
     winner_text = ft.Text("", size=24, weight=ft.FontWeight.BOLD)
     
     def check_winner():
-        """التحقق من الفائز أو التعادل"""
         winning_combinations = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],  # صفوف
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],  # أعمدة
-            [0, 4, 8], [2, 4, 6]  # قطرين
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],  # Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],  # Columns
+            [0, 4, 8], [2, 4, 6]  # Diagonals
         ]
         for combo in winning_combinations:
             a, b, c = combo
@@ -27,74 +24,29 @@ def main(page: ft.Page):
             return "تعادل"
         return None
 
-    def minimax(new_board, player):
-        """خوارزمية Minimax لاتخاذ أفضل قرار للروبوت"""
-        available_spots = [i for i in range(9) if new_board[i] == ""]
-        winner = check_winner()
-
-        if winner == human:
-            return -10
-        elif winner == ai:
-            return 10
-        elif not available_spots:
-            return 0
-
-        moves = []
-        for spot in available_spots:
-            move = {}
-            move["index"] = spot
-            new_board[spot] = player
-
-            if player == ai:
-                result = minimax(new_board, human)
-                move["score"] = result
-            else:
-                result = minimax(new_board, ai)
-                move["score"] = result
-
-            new_board[spot] = ""  
-            moves.append(move)
-
-        if player == ai:
-            best_move = max(moves, key=lambda x: x["score"])
-        else:
-            best_move = min(moves, key=lambda x: x["score"])
-
-        return best_move["index"] if isinstance(best_move["index"], int) else 0
-
-    def ai_move():
-        """حركة الذكاء الاصطناعي"""
-        best_move = minimax(board, ai)
-        board[best_move] = ai
-        buttons[best_move].text = ai
-        buttons[best_move].update()
-        winner = check_winner()
-        if winner:
-            winner_text.value = f"🎉 الفائز: {winner}" if winner != "تعادل" else "😢 تعادل!"
-            page.update()
-            return
-
     def handle_click(index):
-        """حدث النقر على الخلايا"""
+        nonlocal current_player
         if board[index] == "" and winner_text.value == "":
-            board[index] = human
-            buttons[index].text = human
+            board[index] = current_player
+            buttons[index].text = current_player
             buttons[index].update()
             
             winner = check_winner()
             if winner:
-                winner_text.value = f"🎉 الفائز: {winner}" if winner != "تعادل" else "😢 تعادل!"
+                winner_text.value = "🎉 الفائز: " + winner if winner != "تعادل" else "😢 تعادل!"
                 page.update()
                 return
             
-            ai_move()
+            current_player = "O" if current_player == "X" else "X"
+            page.update()
 
     def reset_game(e):
-        """إعادة تشغيل اللعبة"""
+        nonlocal current_player
         for i in range(9):
             board[i] = ""
             buttons[i].text = ""
             buttons[i].update()
+        current_player = "X"
         winner_text.value = ""
         page.update()
 
